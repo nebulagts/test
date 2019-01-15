@@ -1,0 +1,11 @@
+---
+- name: Stop Azure VM
+  hosts: localhost
+  connection: local
+
+  tasks:
+  - name: Stop the virtual machine
+    azure_rm_virtualmachine:
+      resource_group: azure-poc-ansible
+      name: Azure-ansible-VM01
+      allocated: no
