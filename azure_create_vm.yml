@@ -1,0 +1,56 @@
+---
+- name: Create Azure VM
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: azure-poc-ansible
+      name: webinarVnet
+      address_prefixes: "10.0.0.0/16"
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: azure-poc-ansible
+      name: webinarSubnet
+      address_prefix: "10.0.1.0/24"
+      virtual_network: vnet-us-east-sb-main
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+      resource_group: azure-poc-ansible
+      allocation_method: Static
+      name: myPublicIP
+  - name: Create Network Security Group that allows SSH
+    azure_rm_securitygroup:
+      resource_group: azure-poc-ansible
+      name: webinarNetworkSecurityGroup
+      rules:
+      - name: SSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Allow
+        priority: 1001
+        direction: Inbound
+  - name: Create virtual network interface card
+    azure_rm_networkinterface:
+      resource_group: azure-poc-ansible
+      name: myNIC
+      virtual_network: vnet-us-east-sb-main
+      subnet: webinarSubnet
+      public_ip_name: myPublicIP
+      security_group: webinarNetworkSecurityGroup
+  - name: Create VM
+    azure_rm_virtualmachine:
+      resource_group: azure-poc-ansible
+      name: azure-poc-ansibleVM
+      vm_size: Standard_DS1_v2
+      admin_username: fsayfutdinov
+      ssh_password_enabled: false
+      ssh_public_keys:
+      - path: /home/fsayfutdinov/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3Nz{snip}hwhqT9h"
+      network_interfaces: myNIC
+      image:
+        offer: RHEL
+        publisher:
+        sku: '7.4'
+        version: latest
